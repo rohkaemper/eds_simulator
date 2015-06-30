@@ -7,7 +7,7 @@ import sys
 from utils import *
 from processes import *
 
-LOG = 'DEBUG'
+LOG = 'INFO'
 avg_wait = .0
 drop_probability = .0
 
@@ -33,11 +33,6 @@ def main():
 	adv_config = readConfig('./opt/sim.cfg', 'advanced')
 	logging.info(adv_config)
 
-	# configure generators
-	# generator_func = read_generators('generator.csv')
-	# interarrival_gen = generator_func[int(config['interarrival'])]
-	# service_time_gen = generator_func[int(config['service_time_gen'])]
-
 	logging.info('setting parameters...')
 	# set values according to sim.cfg
 	simulation_duration = config['simulation_duration']
@@ -53,24 +48,33 @@ def main():
 
 	# initialize numpy array with zeros
 	data = [.0, .0]
-	logging.debug('Data initialized %s' % data)
-
-	# initialize environment and resource
-	env = simpy.Environment()
-	res = simpy.Resource(env, capacity=number_of_queues)
+	avg_over_runs = [.0, .0]
 
 	logging.info('starting simulation!')
+	num_runs = int(adv_config['number_of_repetitions']) + 1
 
-	# create processes
-	s = env.process(Source(env, res, data))
-	logging.debug('%10.1f: start' % env.now)
+	for x in xrange(1, num_runs):
+		# initialize environment and resource
+		env = simpy.Environment()
+		res = simpy.Resource(env, capacity=number_of_queues)
+		# create processes
+		s = env.process(Source(env, res, data))
+		logging.debug('%10.1f: start' % env.now)
 
-	env.run(until=int(simulation_duration))
-	logging.debug('%10.1f: end' % env.now)
+		env.run(until=int(simulation_duration))
+		logging.debug('%10.1f: end' % env.now)
+		logging.info('Simulation (%d) ended with: \n\t avg. waiting time \t= %.2ftu \n\t drop_probability \t= %.2f%%' % (x, data[0], 100*data[1]))
+		# logging.info('evaluating and displaying data')
+		avg_over_runs[0] = (avg_over_runs[0] + data[0]) / 2
+		avg_over_runs[1] = (avg_over_runs[1] + data[1]) / 2
+		data = [.0, .0]
 
-	logging.info('Simulation ended with: \n\t avg. waiting time \t= %.2f \n\t drop_probability \t= %.2f' % (data[0], data[1]))
-	logging.info('evaluating and displaying data')
-
+	logging.info('Simulation Configuration:\n\t arrival function \t\t= %s, param = %stu \n\t service time function \t= %s, param = %stu \n\t patience function \t\t= %s, param = %stu' % (
+		config['interarrival_gen'], config['avg_interarrival_time'],
+		config['service_time_gen'], config['service_time'],
+		config['patience_gen'], config['avg_patience'])
+	)
+	logging.info('Final result after %d runs: \n\t avg. waiting time \t= %.2ftu \n\t drop_probability \t= %.2f%%' % (num_runs-1, avg_over_runs[0], 100*avg_over_runs[1]))
 
 if (__name__ == '__main__'):
 	main()

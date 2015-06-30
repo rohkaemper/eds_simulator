@@ -22,21 +22,20 @@ def Source(env, res, data):
 	interarrival_gen = generator_func[int(config['interarrival_gen'])]
 	service_time_gen = generator_func[int(config['service_time_gen'])]
 	patience_gen = generator_func[int(config['patience_gen'])]
-	resource = res
 
 	while(True):
 		next_event = interarrival_gen(avg_interarrival)
 		event_service_time = service_time_gen(service_time)
-		if patience.isdigit():
+		if (patience.isdigit() and (float(patience) > .0)):
 			event_patience = patience_gen(float(patience))
 		elif (patience == 'max'):
 			event_patience = float('inf')
 		else:
-			logging.warning('Using Fallback Value!')
+			logging.debug('Using Fallback Value!')
 			event_patience = 0
 
 		yield env.timeout(next_event)
-		p = Process(env, resource, event_service_time, event_patience, data)
+		p = Process(env, res, event_service_time, event_patience, data)
 		number_of_generated_processes += 1
 		logging.debug('%d: Process enters at t = %.2f for d = %.2f with patience %.2f' % (number_of_generated_processes, env.now, event_service_time, event_patience))
 		env.process(p)
