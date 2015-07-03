@@ -69,7 +69,7 @@ def Process(env, res, service_time, patience, data):
 
 	# left_system = env.now
 
-	#mittlere wartezeit
+	# mittlere wartezeit
 	# mittlere auslastung bedieneinheiten
 	# mittlere warteschlangenzeit
 	# mittglere verweildauer sytem
