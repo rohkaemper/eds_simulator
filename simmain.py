@@ -53,8 +53,8 @@ def main():
         num_runs = 1
 
     # initialize numpy array with zeros
-    data = [.0, .0]
-    avg_over_runs = [.0, .0]
+    data = [.0, .0, .0]
+    avg_over_runs = [.0, .0, .0]
     # !!! you have to put an int into capacity, or it will not work !!!
     number_of_queues = int(config['capacity'])
     simlog = []
@@ -65,7 +65,8 @@ def main():
         actual_capacity = number_of_queues + (sim_run*alter_capacity_by)
 
         for repetition in xrange(0, num_runs-1):
-            logging.debug('Setting seed to: %d' %(seed[repetition]))
+            data = [.0, .0, .0]
+            logging.debug('Setting seed to: %d' % (seed[repetition]))
             random.seed(int(seed[repetition]))
             runlog.append('%.2d-%.2d' % (sim_run+1, repetition+1))
             # initialize environment and resource
@@ -82,13 +83,13 @@ def main():
             # logging.info('evaluating and displaying data')
             avg_over_runs[0] = (avg_over_runs[0] + data[0]) / 2
             avg_over_runs[1] = (avg_over_runs[1] + data[1]) / 2
+            avg_over_runs[2] = (avg_over_runs[2] + data[2]) / 2
             # logs data of current run
             runlog.append(data)
-            data = [.0, .0]
 
         logging.debug('Appending current evaluation to list -> %s' % (avg_over_runs))
         simlog.append(avg_over_runs)
-        avg_over_runs = [.0, .0]
+        avg_over_runs = [.0, .0, .0]
 
 
     logging.info('Simulation Configuration:\n\t arrival function \t\t= %s, param = %stu \n\t service time function \t= %s, param = %stu \n\t patience function \t\t= %s, param = %stu' % (
