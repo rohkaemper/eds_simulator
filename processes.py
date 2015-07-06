@@ -10,7 +10,8 @@ drop_probability = .0
 number_of_generated_processes = 0
 avg_service_time = .0
 
-def Source(env, res, data):
+
+def Source(env, res, data, res_usage, drop_log):
 	""" Generates Processes according to configured generator """
 	config = readConfig('./opt/sim.cfg', 'default')
 	avg_interarrival = int(config['avg_interarrival_time'])
@@ -46,13 +47,16 @@ def Source(env, res, data):
 			event_patience = 0
 
 		yield env.timeout(next_event)
-		p = Process(env, res, event_service_time, event_patience, data)
+		p = Process(env, res, event_service_time, event_patience, data, res_usage, drop_log)
 		number_of_generated_processes += 1
 		logging.debug('%d: Process enters at t = %.2f for d = %.2f with patience %.2f' % (number_of_generated_processes, env.now, event_service_time, event_patience))
 		env.process(p)
 
-def Process(env, res, service_time, patience, data):
+def Process(env, res, service_time, patience, data, res_usage, drop_log):
 	entered_system = env.now
+
+	res_usage.append([ env.now, res.count ])
+
 	logging.debug('Resource utilization: %s/%s, queue length: %s' % (res.count, res.capacity, len(res.queue)))
 
 	with res.request() as req:
@@ -68,24 +72,30 @@ def Process(env, res, service_time, patience, data):
 		avg_wait = float((avg_wait + wait) / 2)
 
 		if req not in results:
+			# process dropped out
 			drop_count += 1.0
 			drop_probability = float(drop_count) / number_of_generated_processes
 			logging.debug('Process dropped out after %.2f. (%2.2f)' % (patience, drop_probability))
+			drop_log.append(env.now)
 		else:
+			# process gets served after "waiting" (>= 0tu) in queue
 			logging.debug('Process waited for %.2f, to get served for %.2f' % (wait, service_time))
 			yield env.timeout(service_time)
 			avg_service_time = float((avg_service_time + service_time) / 2)
 			logging.debug('Process finished at %.2f.' % (env.now))
+
 	logging.debug('Average Waiting Value: %10.2f' % (avg_wait))
 	data[0] = avg_wait
 	data[1] = drop_probability
 	data[2] = avg_service_time
+	res_usage.append( [env.now, res.count] )
 	logging.debug('Values in data at end of run %s' % data)
 
 	# left_system = env.now
 
-	# mittlere wartezeit
+	# mittlere wartezeit - ok -> avg_wait
 	# mittlere auslastung bedieneinheiten
-	# mittlere warteschlangenzeit
+	# mittlere bedienzeit - ok -> avg_service_time
+	# mittlere warteschlangenzeit -
 	# mittglere verweildauer sytem
-	# verlustwarhscheinlichkeit / blockierwahrscheinlichkeit
+	# verlustwarhscheinlichkeit / blockierwahrscheinlichkeit - ok -> drop_probability

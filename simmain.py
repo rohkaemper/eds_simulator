@@ -3,7 +3,9 @@ import random
 import logging
 import numpy as np
 import sys
+import matplotlib
 
+from collections import defaultdict
 from utils import *
 from processes import *
 
@@ -36,12 +38,11 @@ def main():
     logging.info('setting parameters...')
     # set values according to sim.cfg
     simulation_duration = config['simulation_duration']
-    num_runs = int(adv_config['number_of_repetitions_per_simulation'])+1
-    num_sims = int(adv_config['number_of_simulations'])+1
+    num_runs = int(adv_config['number_of_repetitions_per_simulation'])
+    num_sims = int(adv_config['number_of_simulations'])
     alter_capacity_by = int(adv_config['alter_capacity_by'])
     seed = []
     if (config['seed'] == 'rand'):
-
         for i in xrange(0,num_runs):
             seed.append(random.randint(0, sys.maxint))
         logging.warning('Randomized initial seed used for measurements (seed = %s)!' % seed)
@@ -59,21 +60,25 @@ def main():
     number_of_queues = int(config['capacity'])
     simlog = []
     runlog = []
-
-    for sim_run in xrange(0,num_sims-1):
+    res_usage = []
+    drop_log = []
+    data_log = []
+    logging.info('Number of Simulations: %d \n Number of runs: %d' % (num_sims, num_runs))
+    for sim_run in range(0,num_sims):
         logging.info('--- Simulation %2d ---' % (sim_run+1))
         actual_capacity = number_of_queues + (sim_run*alter_capacity_by)
 
-        for repetition in xrange(0, num_runs-1):
+        for repetition in xrange(0, num_runs):
             data = [.0, .0, .0]
+            res_usage = []
+            drop_at = []
             logging.debug('Setting seed to: %d' % (seed[repetition]))
             random.seed(int(seed[repetition]))
-            runlog.append('%.2d-%.2d' % (sim_run+1, repetition+1))
             # initialize environment and resource
             env = simpy.Environment()
             res = simpy.Resource(env, capacity=actual_capacity)
             # create processes
-            s = env.process(Source(env, res, data))
+            s = env.process(Source(env, res, data, res_usage, drop_at))
             logging.debug('%10.1f: start' % env.now)
 
             env.run(until=int(simulation_duration))
@@ -86,10 +91,18 @@ def main():
             avg_over_runs[2] = (avg_over_runs[2] + data[2]) / 2
             # logs data of current run
             runlog.append(data)
+            data_log.append(res_usage)
+            drop_log.append(drop_at)
+            del res_usage
+            del data
+            del drop_at
 
         logging.debug('Appending current evaluation to list -> %s' % (avg_over_runs))
         simlog.append(avg_over_runs)
         avg_over_runs = [.0, .0, .0]
+
+    logging.debug('Resource usage: %s \n %d %d' % (data_log, num_sims, num_runs))
+    plotUsage(data_log, drop_log, 10, num_sims, num_runs)
 
 
     logging.info('Simulation Configuration:\n\t arrival function \t\t= %s, param = %stu \n\t service time function \t= %s, param = %stu \n\t patience function \t\t= %s, param = %stu' % (
@@ -99,8 +112,8 @@ def main():
     )
     # TODO: Muss angepasst werden an simrun -> Auswertung von "simlog"
     # logging.info('Final result after %d runs: \n\t avg. waiting time \t= %.2ftu \n\t drop_probability \t= %.2f%%' % (num_runs-1, avg_over_runs[0], 100*avg_over_runs[1]))
-    logging.info(runlog)
-    logging.info(simlog)
+    logging.info('Averages over runs: %s' % (runlog))
+    logging.info('Overall averages: %s' % (simlog))
 
 if (__name__ == '__main__'):
     main()
