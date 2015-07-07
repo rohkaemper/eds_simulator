@@ -55,7 +55,9 @@ def main():
 
     # initialize numpy array with zeros
     data = [.0, .0, .0]
+
     avg_over_runs = [.0, .0, .0]
+    cap = []
     # !!! you have to put an int into capacity, or it will not work !!!
     number_of_queues = int(config['capacity'])
     simlog = []
@@ -67,8 +69,8 @@ def main():
     for sim_run in range(0,num_sims):
         logging.info('--- Simulation %2d ---' % (sim_run+1))
         actual_capacity = number_of_queues + (sim_run*alter_capacity_by)
-
         for repetition in xrange(0, num_runs):
+            cap.append(actual_capacity)
             data = [.0, .0, .0]
             res_usage = []
             drop_at = []
@@ -102,7 +104,7 @@ def main():
         avg_over_runs = [.0, .0, .0]
 
     logging.debug('Resource usage: %s \n %d %d' % (data_log, num_sims, num_runs))
-    plotUsage(data_log, drop_log, 10, num_sims, num_runs)
+    plotUsage(data_log, drop_log, 10, num_sims, num_runs, cap)
 
 
     logging.info('Simulation Configuration:\n\t arrival function \t\t= %s, param = %stu \n\t service time function \t= %s, param = %stu \n\t patience function \t\t= %s, param = %stu' % (
