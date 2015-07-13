@@ -23,6 +23,8 @@ class sim_queue(object):
         self.patience_generator = self.generators[int(config['patience_gen'])]
         self.generated_processes = 0
         self.log = []
+        self.plot_log = []
+        self.drop_log = []
         logging.debug('Source object initialized')
 
         # This generates a process of instantiated object
@@ -47,14 +49,15 @@ class sim_queue(object):
             process_patience = max(process_patience, 0)
             yield self.env.timeout(next_event)
             # generate new process
+            self.generated_processes += 1
             config = self.env, self.res, process_service_time, process_patience
-            NewProcess = Process(config, self.log)
+            NewProcess = Process(config, self.log, self.plot_log, self.drop_log, self.generated_processes)
             self.env.process(NewProcess.run())
 
 
 class Process(object):
 
-    def __init__(self, config, log):
+    def __init__(self, config, log, plot_log, drop_log, process_number):
         env, res, service_time, process_patience = config
         self.env = env
         self.res = res
@@ -64,12 +67,15 @@ class Process(object):
         self.process_patience = process_patience
         self.dropped_out = False
         self.time_in_system = .0
-
+        self.process_number = process_number
         self.log = log
+        self.plot_log = plot_log
+        self.drop_log = drop_log
         logging.debug('Process object generated.')
 
     def run(self):
         self.res_usage_in = int(self.res.count)
+        self.log_queue_count()
         with self.res.request() as req:
             result = yield req | self.env.timeout(self.process_patience)
 
@@ -79,14 +85,20 @@ class Process(object):
             else:
                 yield self.env.timeout(self.service_time)
                 self.time_in_system = self.env.now - self.entered_system
+                self.log_queue_count()
                 logging.debug(
                     'Process has been served [%.2f->%.2f].' % (self.entered_system, self.env.now))
 
         self.res_usage_out = int(self.res.count)
-        self.log.append([self.entered_system, self.wait, self.service_time,
+        self.log.append([self.process_number, self.entered_system, self.wait, self.service_time,
                          self.time_in_system, self.dropped_out, self.res_usage_in, self.res_usage_out])
 
     def drop_out(self):
+        self.log_queue_count()
         self.time_in_system = (self.env.now - self.entered_system)
         self.dropped_out = True
+        self.drop_log.append(self.env.now)
         logging.debug('Process dropped out at %.2f.')
+
+    def log_queue_count(self):
+        self.plot_log.append([self.env.now, self.res.count])

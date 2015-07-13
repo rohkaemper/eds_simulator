@@ -4,7 +4,6 @@ import logging
 import csv
 import sys
 import os
-import matplotlib
 import datetime
 
 from utils import readConfig, plotUsage
@@ -12,6 +11,7 @@ from simclass import sim_queue
 
 LOG = 'INFO'
 LOG_TO_CONSOLE = True
+LOG_TO_FILE = False
 
 
 def main():
@@ -53,7 +53,9 @@ def main():
                  (num_sims, num_runs))
 
     cap = []
+    all_data = []
     data_log = []
+    drop_log = []
     # START of SIMULATION
     for sim_run in range(0, num_sims):
         logging.info('--- Simulation %2d ---' % (sim_run + 1))
@@ -73,13 +75,16 @@ def main():
             env.run(until=simulation_duration)
 
             # By default create sorted logfiles, additionally log to console.
-            queue.log.sort()
+            # queue.log.sort()
             if (LOG_TO_CONSOLE):
                 logging.debug('Measured:\n%s' % (queue.log))
 
-            data_log.append(queue.log)
-            # LogToCSV('./logs/', 'simlog%.2d-%.2d.csv' %
-            #         (sim_run + 1, repetition + 1), queue.log)
+            all_data.append(queue.log)
+            data_log.append(queue.plot_log)
+            drop_log.append(queue.drop_log)
+            if (LOG_TO_FILE):
+                LogToCSV('./logs/', 'simlog%.2d-%.2d.csv' %
+                         (sim_run + 1, repetition + 1), queue.log)
 
             # logs data of current run
             # delete old queue object
@@ -88,10 +93,10 @@ def main():
         #
     # END of SIMULATION
     logging.debug('Gathered data:\n%s' % (data_log))
+    drop_prob = Evaluate_Simulation(num_sims, num_runs, all_data)
+    logging.info(drop_prob)
     # All simulations are finished... calculate and display data!
-    # plotUsage(data_log, drop_log, 10, num_sims, num_runs, cap)
-
-    # logging.info('Final result after %d runs: \n\t avg. waiting time \t= %.2ftu \n\t drop_probability \t= %.2f%%' % (num_runs-1, avg_over_runs[0], 100*avg_over_runs[1]))
+    plotUsage(data_log, drop_log, 10, num_sims, num_runs, cap, drop_prob)
 
 
 def ConfigureSeeds(config, runs):
@@ -123,6 +128,25 @@ def LogToCSV(dir, file, log):
                            'time_in_sys', 'got_dropped', 'in_res_usage', 'out_res_usage']])
         writer.writerows(log)
         csvout.close()
+
+
+def Evaluate_Simulation(sim_count, run_count, logs):
+    logging.debug('Found %dx%d = %d entries' %
+                  (sim_count, run_count, len(logs)))
+    generated_processes = 0
+    dropped_processes = 0
+    drop_prob = []
+    for item in logs:
+        for element in item:
+            # Here we evaluate if a drop happened, else the values will be
+            generated_processes = element[0]
+            if (element[5]):
+                dropped_processes += 1
+        drop_prob.append(float((float(dropped_processes)/float(generated_processes)) * 100))
+        logging.debug('Drop Rate:%s/%s %.2f%%' % (dropped_processes, generated_processes, float((float(dropped_processes)/float(generated_processes)) * 100)))
+        generated_processes = 0
+        dropped_processes = 0
+    return drop_prob
 
 if (__name__ == '__main__'):
     main()

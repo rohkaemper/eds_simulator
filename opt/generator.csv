@@ -2,7 +2,5 @@
 0;lambda t: random.expovariate(1.0/t)
 1;lambda t: random.randint(0,t)
 2;lambda t: random.uniform(0,t)
-3;lambda t: random.normalvariate(t,1)
-4;lambda t: random.normalvariate(t,1.5)
-5;lambda t: random.normalvariate(t,0.5)
-6;lambda t: t
+3;lambda t: random.normalvariate(t,1.0)
+4;lambda t: t

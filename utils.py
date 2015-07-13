@@ -27,44 +27,47 @@ def read_generators(filename):
     return generators
 
 
-def plotUsage(data, drop_log, tick, num_sims, num_runs, cap):
+def plotUsage(data, drop_log, tick, num_sims, num_runs, cap, drop_probability):
     fig, axes = plt.subplots(num_sims, num_runs, sharex=True, sharey=True)
+    plt.subplots_adjust(hspace=0.45)
     count = -1
     for i in range(0, num_sims):
         for j in range(0, num_runs):
             count += 1
-            x = list()
-            y = list()
+            x_list = list()
+            y_list = list()
             for item in data[count]:
                 try:
-                    x.append(float(item[0]))
-                    y.append(float(item[1]))
+                    x = float(item[0])
+                    y1, y2 = float(item[1]), float(last[1])
+                    x_list.append(x)
+                    y_list.append(max(y1, y2))
                 except:
-                    x.append(.0)
-                    y.append(.0)
+                    x_list.append(.0)
+                    y_list.append(.0)
+                last = item
 
-            max_x = int(max(x))
+            max_x = int(max(x_list))
             max_y = cap[count] + 2
-
             ax = plt.subplot(num_sims, num_runs, count + 1)
             ax.axhline(cap[count], color='g', linestyle='--')
-            ax.step(x, y, label='Resource usage over time')
+            ax.step(x_list, y_list, label='Resource usage over time')
             drop_x = drop_log[count]
-            drop_y = len(drop_x) * [int(max(y))]
+            drop_y = len(drop_x) * [int(max(y_list))]
             ax.plot(drop_x, drop_y, 'rv')
             if (num_runs == 1):
-                ax.set_title('Sim. %d [cap: %d]' % (i + 1, cap[count]))
+                ax.set_title('Sim. %d [cap: %d] -> %.2f%% loss' % (i + 1, cap[count], drop_probability[count]))
             else:
                 ax.set_title(
-                    'Sim. %d [cap: %d; run: %d]' % (i + 1, cap[count], j + 1))
+                    'Sim. %d [cap: %d; run: %d] -> %.2f%% loss' % (i + 1, cap[count], j + 1, drop_probability[count]))
 
-            plt.xticks(range(0, max_x, tick))
+            # plt.xticks(range(0, max_x, tick))
             plt.yticks(range(0, max_y))
             plt.grid()
 
-            del x, y
+            del x_list, y_list
 
     logging.debug('plotUsage -> Drop Events at:\n%s' % drop_log)
-    # Workaround for User Warning "tight_layout"
-    plt.tight_layout()
+
+    # plt.tight_layout()
     plt.show()
