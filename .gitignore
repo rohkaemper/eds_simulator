@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 TODO
+logs/
 env/
 build/
 develop-eggs/
@@ -23,6 +24,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+*.sublime-*
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

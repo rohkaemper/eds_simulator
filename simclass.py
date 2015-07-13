@@ -23,7 +23,7 @@ class sim_queue(object):
         self.patience_generator = self.generators[int(config['patience_gen'])]
         self.generated_processes = 0
         self.log = []
-        logging.info('Source object initialized')
+        logging.debug('Source object initialized')
 
         # This generates a process of instantiated object
         env.process(self.run())
@@ -50,15 +50,6 @@ class sim_queue(object):
             config = self.env, self.res, process_service_time, process_patience
             NewProcess = Process(config, self.log)
             self.env.process(NewProcess.run())
-#            self.WriteLog(config, 0)
-
-    def WriteLog(self, config, toFile):
-        if (toFile):
-            pass
-        else:
-            logging.info(
-                'Running with configuration:\n' + pprint.pformat(config))
-            logging.info(self.log)
 
 
 class Process(object):
@@ -92,7 +83,8 @@ class Process(object):
                     'Process has been served [%.2f->%.2f].' % (self.entered_system, self.env.now))
 
         self.res_usage_out = int(self.res.count)
-        self.log.append([self.entered_system, self.wait, self.service_time, self.time_in_system, self.dropped_out, self.res_usage_in, self.res_usage_out])
+        self.log.append([self.entered_system, self.wait, self.service_time,
+                         self.time_in_system, self.dropped_out, self.res_usage_in, self.res_usage_out])
 
     def drop_out(self):
         self.time_in_system = (self.env.now - self.entered_system)
