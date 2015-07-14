@@ -61,7 +61,7 @@ def plotUsage(data, drop_log, tick, num_sims, num_runs, cap, drop_probability, T
             # ax.axhline(cap[count], color='g', linestyle='--')
             # ax.step(x_list, y_list, label='Resource usage over time')
             plt.axhline(
-                cap[count], color='g', linestyle='--', label='maximum capacity')
+                cap[count], color='g', linestyle='--')
             plt.step(x_list, y_list, label='processes in queue')
             drop_x = drop_log[count]
             drop_y = len(drop_x) * [int(max(y_list))]
@@ -85,7 +85,7 @@ def plotUsage(data, drop_log, tick, num_sims, num_runs, cap, drop_probability, T
             if (j < 2):
                 if (TOFILE):
                     plt.tight_layout()
-                    plt.savefig('./figs/simulation%d-%d.png' %
+                    plt.savefig('./figs/usage/simulation%d-%d.png' %
                                 (i + 1, j + 1), dpi=(100))
                 else:
                     plt.show()
@@ -95,16 +95,16 @@ def plotUsage(data, drop_log, tick, num_sims, num_runs, cap, drop_probability, T
         # plot x in one image
         fig = plt.figure(dpi=100)
         plt.axhline(
-            cap[count], color='g', linestyle='--', label='maximum capacity')
+            cap[count], color='g', linestyle='--')
         for x in xrange(0, len(a_x)):
-            plt.step(a_x[x], a_y[x], label='run %d' % (x))
-            plt.plot(dx[x], dy[x], 'v', label='run %d drop' % (x))
+            plt.step(a_x[x], a_y[x], label='run %d' % (x+1))
+            plt.plot(dx[x], dy[x], 'v', label='run %d drop' % (x+1))
 
         if (num_runs == 1):
-            fig.suptitle('Sim. %d [cap: %d]' % (i + 1, cap[count]))
+            fig.suptitle('Sim. %d [cap: %d]' % (i+1, cap[count]))
         else:
             fig.suptitle(
-                'Sim. %d [cap: %d; run: %d]' % (i + 1, cap[count], j + 1))
+                'Sim. %d [cap: %d; run: %d]' % (i + 1, cap[count], j+1))
         # Check if output folder exists
         plt.xticks(range(0, max_x, tick))
         plt.yticks(range(0, max_y))
@@ -116,7 +116,7 @@ def plotUsage(data, drop_log, tick, num_sims, num_runs, cap, drop_probability, T
         # limit to 4 files/windows output...
         if (TOFILE):
             plt.tight_layout()
-            plt.savefig('./figs/simulation%d.png' % (i + 1), dpi=(100))
+            plt.savefig('./figs/usage/simulation%d.png' % (i + 1), dpi=(100))
         else:
             plt.show()
         del a_x, a_y, dx, dy
@@ -127,12 +127,20 @@ def plotCDF(list_elements, sim_run, repetition, actual_capacity, TOFILE):
     fig = plt.figure()
     N = len(list_elements)
     x = numpy.sort(list_elements)
-    y = numpy.array(range(N))/float(N)
-    logging.info(x)
-    plt.plot(x,y*100)
+    y = numpy.linspace(0,1,N)
+
+    logging.info(y)
+    plt.step(x,y*100)
     plt.title('Simulation %d-%d with capacity of %d' % (sim_run+1, repetition+1, actual_capacity))
     plt.xlabel('average time in system')
     plt.ylim(0,100)
+    if (max(x) > 20):
+        tickrange = 5
+    else:
+        tickrange = 1
+    plt.xticks(range(0,int(max(x)),tickrange))
+    plt.yticks(range(0,100,10))
+    plt.grid()
     if (TOFILE):
         plt.tight_layout()
         plt.savefig('./figs/cdf/time_in_sys/simulation%d-%d.png' % (sim_run+1, repetition+1), dpi=(150))

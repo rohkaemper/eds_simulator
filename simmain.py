@@ -13,7 +13,7 @@ LOG = 'INFO'
 LOG_TO_CONSOLE = True
 LOG_TO_FILE = False
 PLOT_CDF_TIME_IN_SYS = True
-PLOT_USAGE = False
+PLOT_USAGE = True
 
 def main():
     """ Read configuration file, set parameters and start simulation """
