@@ -25,6 +25,7 @@ class sim_queue(object):
         self.log = []
         self.plot_log = []
         self.drop_log = []
+        self.time_in_system_log = []
         logging.debug('Source object initialized')
 
         # This generates a process of instantiated object
@@ -51,13 +52,13 @@ class sim_queue(object):
             # generate new process
             self.generated_processes += 1
             config = self.env, self.res, process_service_time, process_patience
-            NewProcess = Process(config, self.log, self.plot_log, self.drop_log, self.generated_processes)
+            NewProcess = Process(config, self.log, self.plot_log, self.drop_log, self.generated_processes, self.time_in_system_log)
             self.env.process(NewProcess.run())
 
 
 class Process(object):
 
-    def __init__(self, config, log, plot_log, drop_log, process_number):
+    def __init__(self, config, log, plot_log, drop_log, process_number, time_in_system_log):
         env, res, service_time, process_patience = config
         self.env = env
         self.res = res
@@ -71,6 +72,7 @@ class Process(object):
         self.log = log
         self.plot_log = plot_log
         self.drop_log = drop_log
+        self.time_in_system_log = time_in_system_log
         logging.debug('Process object generated.')
 
     def run(self):
@@ -85,6 +87,7 @@ class Process(object):
             else:
                 yield self.env.timeout(self.service_time)
                 self.time_in_system = self.env.now - self.entered_system
+                self.time_in_system_log.append(self.time_in_system)
                 self.log_queue_count()
                 logging.debug(
                     'Process has been served [%.2f->%.2f].' % (self.entered_system, self.env.now))
@@ -96,6 +99,7 @@ class Process(object):
     def drop_out(self):
         self.log_queue_count()
         self.time_in_system = (self.env.now - self.entered_system)
+        self.time_in_system_log.append(self.time_in_system)
         self.dropped_out = True
         self.drop_log.append(self.env.now)
         logging.debug('Process dropped out at %.2f.')

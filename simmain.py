@@ -6,13 +6,14 @@ import sys
 import os
 import datetime
 
-from utils import readConfig, plotUsage
+from utils import readConfig, plotUsage, CheckDir, plotCDF
 from simclass import sim_queue
 
 LOG = 'INFO'
 LOG_TO_CONSOLE = True
 LOG_TO_FILE = False
-
+PLOT_CDF_TIME_IN_SYS = True
+PLOT_USAGE = False
 
 def main():
     """ Read configuration file, set parameters and start simulation """
@@ -28,6 +29,8 @@ def main():
             level=logging.WARN, format='%(levelname)s: %(message)s')
 
     logging.info('Start of Simulation')
+    CheckDir('./figs/cdf/time_in_sys')
+    CheckDir('./figs/usage')
     # read config file; try catch block... for missing file
     logging.debug('reading config file...')
     config = readConfig('./opt/sim.cfg', 'default')
@@ -56,6 +59,7 @@ def main():
     all_data = []
     data_log = []
     drop_log = []
+    time_in_sys_log = []
     # START of SIMULATION
     for sim_run in range(0, num_sims):
         logging.info('--- Simulation %2d ---' % (sim_run + 1))
@@ -82,6 +86,10 @@ def main():
             all_data.append(queue.log)
             data_log.append(queue.plot_log)
             drop_log.append(queue.drop_log)
+            time_in_sys_log.append(queue.time_in_system_log)
+            if (PLOT_CDF_TIME_IN_SYS):
+                plotCDF(queue.time_in_system_log, sim_run, repetition, actual_capacity, True)
+
             if (LOG_TO_FILE):
                 LogToCSV('./logs/', 'simlog%.2d-%.2d.csv' %
                          (sim_run + 1, repetition + 1), queue.log)
@@ -96,8 +104,8 @@ def main():
     drop_prob = Evaluate_Simulation(num_sims, num_runs, all_data)
     logging.info(drop_prob)
     # All simulations are finished... calculate and display data!
-    plotUsage(data_log, drop_log, 10, num_sims, num_runs, cap, drop_prob)
-
+    if (PLOT_USAGE):
+        plotUsage(data_log, drop_log, max(10, simulation_duration/10), num_sims, num_runs, cap, drop_prob, True)
 
 def ConfigureSeeds(config, runs):
     seed = []
