@@ -23,8 +23,6 @@ class Sim_source(object):
     def __init__(self, env, res, config, adv_config, repetition):
         self.env = env
         self.res = res
-        # self.seed_conf = int(seed)
-        # self.capacity = int(config['capacity'])
         self.interarrival_rate = int(config['avg_interarrival_time'])+(repetition * int(adv_config['alter_interarrival_time_by']))
         self.service_duration = int(config['service_time'])
         self.avg_patience = config['avg_patience']
@@ -120,7 +118,7 @@ class Process(object):
         self.log_queue_count()
         # try to enter queue
         with self.res.request() as req:
-            # drop event OR get seved
+            # drop event OR get served
             result = yield req | self.env.timeout(self.process_patience)
 
             self.wait = self.env.now - self.entered_system
