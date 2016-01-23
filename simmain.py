@@ -5,13 +5,13 @@ import logging
 import csv
 import sys
 # import os
-# import datetime
+import time, datetime
 
 from utils import *
 from simclass import Sim_source
 
 LOG = 'INFO'
-LOG_TO_FILE = True
+LOG_TO_FILE = False
 PLOT_CDF_TIME_IN_SYS = True
 PLOT_USAGE = True
 RT_DEMO = False             # Variable to demonstrate Realtime Simulation
@@ -66,7 +66,8 @@ def main():
     progress = 0
     endVal = num_sims * num_runs
     # START of SIMULATION
-    progressbar(0, endVal, 30)
+    # progressbar(0, endVal, 30)
+    started_at = time.time()
     for sim_run in range(0, num_sims):
         logging.debug('--- Simulation %2d ---' % (sim_run + 1))
         actual_capacity = number_of_queues + (sim_run * alter_capacity_by)
@@ -110,7 +111,8 @@ def main():
             #
         #
     # END of SIMULATION
-
+    ended_at = time.time()
+    print('\nSimulation took %.3fs.\n' % (ended_at-started_at))
     drop_prob = calc_drop_probability(num_sims, num_runs, all_data)
     logging.debug('Drop probabilities:\n%s' % (drop_prob))
     boxplot_time_in_system_data(num_sims, num_runs, time_in_sys_log)
@@ -119,6 +121,7 @@ def main():
     # All simulations are finished... calculate and display data!
     if (PLOT_USAGE):
         plotUsage(data_log, drop_log, num_sims, num_runs, cap, drop_prob, True)
+    print('Run ended after %.3fs.\n' % (time.time()-started_at))
 
 
 def calc_drop_probability(sim_count, run_count, logs):

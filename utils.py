@@ -8,7 +8,6 @@ import numpy
 import random
 import sys
 import scipy
-from scipy.stats import lognorm, bayes_mvs
 
 
 def readConfig(file, section):
@@ -96,8 +95,8 @@ def plotUsage(data, drop_log, num_sims, num_runs, cap, drop_probability, TOFILE)
             if (j < 2):
                 if (TOFILE):
                     plt.tight_layout()
-                    plt.savefig('./figs/usage/simulation%d-%d.png' %
-                                (i + 1, j + 1), dpi=(100))
+                    plt.savefig('./figs/usage/simulation%d-%d.pdf' %
+                                (i + 1, j + 1), dpi=(100), format='pdf')
                 else:
                     plt.show()
 
@@ -127,7 +126,7 @@ def plotUsage(data, drop_log, num_sims, num_runs, cap, drop_probability, TOFILE)
         # limit to 4 files/windows output...
         if (TOFILE):
             plt.tight_layout()
-            plt.savefig('./figs/usage/simulation%d.png' % (i + 1), dpi=(100))
+            plt.savefig('./figs/usage/simulation%d.pdf' % (i + 1), dpi=(100), format='pdf')
         else:
             plt.show()
         del a_x, a_y, dx, dy
@@ -158,10 +157,11 @@ def plotCDF(list_elements, sim_run, repetition, actual_capacity, TOFILE):
     plt.yticks(range(0, 100, 10))
     plt.ylim(ymax=101)
     plt.grid()
+
     if (TOFILE):
         plt.tight_layout()
-        plt.savefig('./figs/cdf/time_in_sys/simulation%d-%d.png' %
-                    (sim_run + 1, repetition + 1), dpi=(150))
+        plt.savefig('./figs/cdf/time_in_sys/simulation%d-%d.pdf' %
+                    (sim_run + 1, repetition + 1), dpi=(150), format='pdf')
     else:
         plt.show()
     plt.close()
@@ -208,7 +208,7 @@ def boxplot_time_in_system_data(num_sims, num_runs, data):
     bp = ax.boxplot(mydata)
 
     # plt.show()
-    plt.savefig('./figs/cdf/time_in_sys/boxplot.png')
+    plt.savefig('./figs/cdf/time_in_sys/boxplot.pdf')
     plt.close()
 
 
@@ -233,11 +233,11 @@ def errorbarplot_time_in_system_data(num_sims, num_runs, data, conf):
     mydata = reformat_input(data, num_sims, num_runs)
 
     xlist = list()
-    ylist  = list()
+    ylist = list()
     yerrlist = list()
-    x=0
+    x = 0
     for errordata in mydata:
-        x+=1
+        x += 1
         xlist.append(x)
         y, yerr = mean_confidence_interval(errordata, conf)
         ylist.append(y)
@@ -245,11 +245,19 @@ def errorbarplot_time_in_system_data(num_sims, num_runs, data, conf):
 
     # plot it with errorbars
     bp = ax.errorbar(xlist, ylist, yerr=yerrlist, fmt='o')
-    plt.xticks(range(0,num_sims+2))
+    plt.xticks(range(0, num_sims+2))
     # plt.ylim(ymin=0)
     # eventuell noch die mittelwerte interpolieren
     # plt.show()
-    plt.savefig('./figs/cdf/time_in_sys/errorbars.png')
+
+    # ## NEU Versuch Polyfit
+    # coefficients =numpy.polyfit(xlist,ylist)
+    # polynomials =numpy.poly1d(coefficients)
+    # ys = numpy.polyval(xlist,ylist)
+    # plt.plot(xlist,ys)
+    # ##
+
+    plt.savefig('./figs/cdf/time_in_sys/errorbars.pdf')
     plt.close()
 
 
