@@ -24,3 +24,6 @@ section [advanced]:
   -> alter parameter:
     - capacity by (e.g. 1, per simulation)
     - ... more to come!
+
+This project is not maintained any more.
+Regards
